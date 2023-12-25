@@ -12,6 +12,8 @@ uvicorn = "^0.25.0"
 pandas = "^2.1.4"
 requests = "^2.31.0"
 python-multipart = "^0.0.6"
+langchain = "^0.0.352"
+langchain-experimental = "^0.0.47"
 
 
 [build-system]

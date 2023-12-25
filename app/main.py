@@ -1,9 +1,11 @@
-from fastapi import FastAPI, File, UploadFile, Request, Form
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, File, UploadFile, Form
 from pydantic import BaseModel
 import pandas as pd
 from io import StringIO
-
+from langchain.agents.agent_types import AgentType
+from langchain.chat_models import ChatOpenAI
+from langchain_experimental.agents.agent_toolkits import create_python_agent
+from langchain_experimental.tools import PythonREPLTool
 
 app = FastAPI()
 
@@ -28,16 +30,24 @@ def update_item(item: Item):
 @app.post("/uploadfile/")
 async def create_upload_file(
     form_file: UploadFile = File(),
-    user_input_text: str = Form(),
+    question: str = Form(),
 ):
 
     _csvdata = StringIO(str(form_file.file.read(), 'utf-8'))
     csvdata = pd.read_csv(_csvdata)
-    print(csvdata)
+
+    # https://python.langchain.com/docs/integrations/toolkits/python#fibonacci-example
+    agent_executor = create_python_agent(
+        llm=ChatOpenAI(temperature=0, max_tokens=1000),
+        tool=PythonREPLTool(),
+        verbose=True,
+        agent_type=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+    )
+    agent_executor.run(question)
 
     """
     1. CSV と入力文を入力し, 分析する Python コードを書かせる
     2. Python REPL で実行させる
     """
-    
-    return user_input_text
+
+    return question
